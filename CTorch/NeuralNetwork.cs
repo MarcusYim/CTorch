@@ -27,7 +27,9 @@ namespace CTorch
             weights = new Matrix<double>[depth];
             biases = new Vector<double>[depth];
 
-            for (int i = 0; i < depth; i++)
+            weights[0] = mb.Random(layerNumbers[0], layerNumbers[0]);
+
+            for (int i = 1; i < depth; i++)
             {
                 weights[i] = mb.Random(layerNumbers[i], layerNumbers[i - 1]);
                 biases[i] = vb.Random(layerNumbers[i]);
@@ -80,7 +82,7 @@ namespace CTorch
 
             return activationsAndZ;
         }
-
+        
         public static void Main(String[] args)
         {
             int[] inp = { 3, 2, 2 };
