@@ -4,12 +4,13 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using MathNet.Numerics;
 using MathNet.Numerics.LinearAlgebra;
 using MathNet.Numerics.LinearAlgebra.Double;
 
 namespace CTorch
 {
-    class NeuralNetwork
+    class BinaryOutputNeuralNetwork
     {
         Matrix<double>[] weights;
         Vector<double>[] biases;
@@ -17,19 +18,20 @@ namespace CTorch
         int[] nodesPerLayer;
         int numLayers;
 
-        public NeuralNetwork(int[] layerNumbers, int depth)
+        public BinaryOutputNeuralNetwork(int[] layerNumbers)
         {
             nodesPerLayer = layerNumbers;
-            numLayers = depth;
+            numLayers = nodesPerLayer.GetLength(0);
 
             var mb = DenseMatrix.Build;
             var vb = DenseVector.Build;
-            weights = new Matrix<double>[depth];
-            biases = new Vector<double>[depth];
+            weights = new Matrix<double>[numLayers];
+            biases = new Vector<double>[numLayers];
 
             weights[0] = mb.Random(layerNumbers[0], layerNumbers[0]);
+            biases[0] = vb.Random(layerNumbers[0]);
 
-            for (int i = 1; i < depth; i++)
+            for (int i = 1; i < numLayers; i++)
             {
                 weights[i] = mb.Random(layerNumbers[i], layerNumbers[i - 1]);
                 biases[i] = vb.Random(layerNumbers[i]);
@@ -47,7 +49,7 @@ namespace CTorch
                 return x;
             }
         }
-
+        
         //this is d(relu)/dy
         //thanks william
         private double dreludy(double x)
@@ -62,7 +64,12 @@ namespace CTorch
             }
         }
 
-        public Vector<double>[,] calculateActivationsAndZ(Vector<double> input)
+        public double sigmoid(double x)
+        {
+            return 1 / (1 + Math.Pow(Constants.E, -1 * x));
+        }
+
+        public Vector<double>[,] feedForward(Vector<double> input)
         {
             Vector<double>[,] activationsAndZ = new Vector<double>[2, numLayers];
             for (int i = 0; i < numLayers; i++)
@@ -83,16 +90,35 @@ namespace CTorch
             return activationsAndZ;
         }
         
+        private Vector<double> outputError(Vector<double> solution)
+        {
+
+        }
+
+        public Vector<double>[] backPropagation()
+        {
+
+        }
+
         public static void Main(String[] args)
         {
-            int[] inp = { 3, 2, 2 };
+            long then = DateTimeOffset.Now.ToUnixTimeMilliseconds();
 
-            NeuralNetwork nn = new NeuralNetwork(inp, 6);
+            int[] inp = { 10, 10, 1 };
 
-            double[] z = { 2, 1, 5 };
-            Vector<double>[,] x = nn.calculateActivationsAndZ(DenseVector.Build.DenseOfArray(z));
-            Console.WriteLine(x[0, 0]);
-            Console.WriteLine(x[1, 0]);
+            Classifier nn = new Classifier(inp);
+
+            
+            double[] z = { 2, 1, 5, 5, 3, 10, 34, 1, 5, 10 };
+            Vector<double>[,] x = nn.feedForward(DenseVector.Build.DenseOfArray(z));
+            Console.WriteLine(DateTimeOffset.Now.ToUnixTimeMilliseconds() - then + " ms");
+
+            Console.WriteLine(x[0, x.GetLength(1) - 1]);
+            Console.WriteLine(x[1, x.GetLength(1) - 1]);
+
+
+            double[] arr = x[1, x.GetLength(1) - 1].ToArray();
+            Console.WriteLine(nn.sigmoid(arr[0]));
         }
     }
 }
