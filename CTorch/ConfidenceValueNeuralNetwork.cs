@@ -10,7 +10,7 @@ using MathNet.Numerics.LinearAlgebra.Double;
 
 namespace CTorch
 {
-    class BinaryOutputNeuralNetwork
+    class ConfidenceValueNeuralNetwork
     {
         Matrix<double>[] weights;
         Vector<double>[] biases;
@@ -18,7 +18,7 @@ namespace CTorch
         int[] nodesPerLayer;
         int numLayers;
 
-        public BinaryOutputNeuralNetwork(int[] layerNumbers)
+        public ConfidenceValueNeuralNetwork(int[] layerNumbers)
         {
             nodesPerLayer = layerNumbers;
             numLayers = nodesPerLayer.GetLength(0);
@@ -28,6 +28,7 @@ namespace CTorch
             weights = new Matrix<double>[numLayers];
             biases = new Vector<double>[numLayers];
 
+            //give random values to all weights and baises
             weights[0] = mb.Random(layerNumbers[0], layerNumbers[0]);
             biases[0] = vb.Random(layerNumbers[0]);
 
@@ -38,11 +39,12 @@ namespace CTorch
             }
         }
 
+        //ReLU
         private double relu(double x)
         {
             if (x <= 0)
             {
-                return 0;
+                return 0;   
             }
             else
             {
@@ -50,9 +52,8 @@ namespace CTorch
             }
         }
         
-        //this is d(relu)/dy
-        //thanks william
-        private double dreludy(double x)
+        //derivative of ReLU
+        private double drelu(double x)
         {
             if (x <= 0)
             {
@@ -64,11 +65,13 @@ namespace CTorch
             }
         }
 
+        //sigmoid for output
         public double sigmoid(double x)
         {
             return 1 / (1 + Math.Pow(Constants.E, -1 * x));
         }
 
+        //calculate activations and Zs for every layer
         public Vector<double>[,] feedForward(Vector<double> input)
         {
             Vector<double>[,] activationsAndZ = new Vector<double>[2, numLayers];
@@ -90,14 +93,17 @@ namespace CTorch
             return activationsAndZ;
         }
         
-        private Vector<double> outputError(Vector<double> solution)
+        //get the output error
+        private Vector<double> getOutputError(Vector<double> solution, Vector<double> finalActivation, Vector<double> finalZ)
         {
-
+            //(a-y) EWiseProd  d(relu(finalZ))/dy
+            return finalActivation.Subtract(solution).PointwiseMultiply(finalZ.Map(x => drelu(x), Zeros.AllowSkip));
         }
 
-        public Vector<double>[] backPropagation()
+        //propagate error through network
+        public Vector<double>[] backPropagate()
         {
-
+            return null;
         }
 
         public static void Main(String[] args)
@@ -106,7 +112,7 @@ namespace CTorch
 
             int[] inp = { 10, 10, 1 };
 
-            Classifier nn = new Classifier(inp);
+            ConfidenceValueNeuralNetwork nn = new ConfidenceValueNeuralNetwork(inp);
 
             
             double[] z = { 2, 1, 5, 5, 3, 10, 34, 1, 5, 10 };
