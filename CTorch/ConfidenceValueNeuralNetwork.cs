@@ -101,9 +101,17 @@ namespace CTorch
         }
 
         //propagate error through network
-        public Vector<double>[] backPropagate()
+        public Vector<double>[] backPropagate(Vector<double> outputError, Vector<double>[] zs)
         {
-            return null;
+            Vector<double>[] dels = new Vector<double>[numLayers];
+            dels[dels.Length - 1] = outputError;
+
+            for (int i = numLayers - 2; i > 0; i--)
+            {
+                dels[i] = weights[i + 1].TransposeThisAndMultiply(dels[i + 1]).PointwiseMultiply(zs[i].Map(x => drelu(x), Zeros.AllowSkip));
+            }
+
+            return dels;
         }
 
         public static void Main(String[] args)
