@@ -122,7 +122,7 @@ namespace CTorch
             Vector<double>[] deltas = new Vector<double>[numLayers];
             deltas[deltas.Length - 1] = outputError;
 
-            for (int i = numLayers - 2; i > 0; i--)
+            for (int i = numLayers - 2; i >= 0; i--)
             {
                 //del(this)=(weights(last)^T * del(last)) EWiseProd drelu(z(this))
                 deltas[i] = weights[i + 1].TransposeThisAndMultiply(deltas[i + 1]).PointwiseMultiply(zs[i].Map(drelu, Zeros.AllowSkip));
@@ -138,15 +138,16 @@ namespace CTorch
             Vector<double> outputError = getOutputError(solution, aAndZ[0][numLayers - 1], aAndZ[1][numLayers - 1]);
             Vector<double>[] deltas = backPropagate(outputError, aAndZ[1]);
 
+            //seems like deltas has 1 too many values
             for (int i = 0; i < numLayers; i++)
             {
                 biases[i] = biases[i].Subtract(deltas[i].Multiply(alpha));
             }
 
-            for (int i = 0; i < numLayers; i++)
+            for (int i = 1; i < numLayers; i++)
             {
                 //outer product looks like it should work here
-                weights[i] = weights[i].Subtract(deltas[i].OuterProduct(aAndZ[0][i]).Multiply(alpha));
+                weights[i] = weights[i].Subtract(deltas[i].OuterProduct(aAndZ[0][i - 1]).Multiply(alpha));
             }
         }
 
@@ -200,7 +201,7 @@ namespace CTorch
         {
             long then = DateTimeOffset.Now.ToUnixTimeMilliseconds();
 
-            int[] layerNums = { 6, 4, 2, 1 };
+            int[] layerNums = { 6, 4, 2, 1};
 
             ConfidenceValueNeuralNetwork nn = new ConfidenceValueNeuralNetwork(layerNums);
 
@@ -212,7 +213,8 @@ namespace CTorch
                 nn.gradientDescent(input[i].x, input[i].y);
             }
 
-            Console.WriteLine(nn.feedForward(test[0].x)[0]);
+
+            Console.WriteLine(nn.feedForward(test[0].x)[0][layerNums.Length - 1]);
         }
     }
 }
